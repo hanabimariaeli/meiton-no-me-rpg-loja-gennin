@@ -1,0 +1,564 @@
+/**
+ * navbar.js — Injeção completa da navbar ORIGINAL (HTML + CSS + eventos)
+ */
+(function() {
+    // ─── 0. FAVICON (Shuriken Ninja) ──────────────────────────────────────────
+    (function setShurikenFavicon() {
+        let link = document.querySelector("link[rel*='icon']");
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+        }
+        link.type = 'image/svg+xml';
+        link.href = 'assets/images/favicon.svg';
+    })();
+
+    // ─── 1. CSS ───────────────────────────────────────────────────────────────
+    const style = document.createElement('style');
+    style.textContent = `
+        #mobile-menu {
+            position: fixed; top: 64px; left: 0; right: 0; bottom: 0;
+            z-index: 40; overflow-y: auto;
+            background-color: #ffffff;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        #mobile-menu.menu-aberto { transform: translateX(0); }
+        #mobile-overlay {
+            display: none; position: fixed; inset: 0;
+            z-index: 30; background: rgba(0, 0, 0, 0.5);
+        }
+        #mobile-overlay.menu-aberto { display: block; }
+        #icon-close { display: none; }
+        .menu-aberto-icon #icon-open  { display: none; }
+        .menu-aberto-icon #icon-close { display: block; }
+        @media (min-width: 1024px) {
+            #hamburger-wrapper { display: none; }
+            #mobile-menu, #mobile-overlay { display: none !important; }
+            #desktop-menu { display: flex; }
+        }
+        @media (max-width: 1023px) {
+            #desktop-menu { display: none; }
+            #hamburger-wrapper { display: block; }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // ─── 2. HTML ──────────────────────────────────────────────────────────────
+    const root = document.createElement('div');
+    root.id = 'nb-root';
+    root.innerHTML = `
+        <nav class="navbar bg-base-300 shadow-sm fixed top-0 left-0 right-0 z-50">
+            <div class="flex-1">
+                <a href="index.html" class="px-3 text-lg font-bold flex items-center gap-2">
+                    🍥 Naruto RPG - STAR 🍜
+                </a>
+            </div>
+
+            <!-- Menu Desktop -->
+            <div id="desktop-menu" class="flex-none">
+                <ul class="menu menu-horizontal px-1">
+                    <li><a href="index.html">Início</a></li>
+                    <li>
+                        <details>
+                            <summary>Utilitários</summary>
+                            <ul class="bg-base-100 rounded-t-none p-2 w-64 shadow-lg">
+                                <li><a href="pages/utilitarios/zetsu_clones.html">Zetsus e Clones</a></li>
+                                <li><a href="pages/utilitarios/teletransporte_marcas.html">Teletransporte e Marcas</a></li>
+                                <li><a href="pages/utilitarios/ocultacoes.html">Ocultação de Técnicas</a></li>
+                                <li><a href="pages/utilitarios/evasao_e_contraataque.html">Evasão e Contra-Ataque</a></li>
+                            </ul>
+                        </details>
+                    </li>
+                    <li><a href="pages/introducao.html">Introdução ao RPG</a></li>
+                    <li>
+                        <details>
+                            <summary>Habilidades Gerais</summary>
+                            <ul class="bg-base-100 rounded-t-none p-2 w-64 shadow-lg">
+                                <li><a href="pages/habilidades_gerais/taijutsus.html">Taijutsu</a></li>
+                                <li>
+                                    <details>
+                                        <summary class="font-bold text-amber-500">Elementais/Gerais</summary>
+                                        <ul class="p-2 rounded-lg mt-1">
+                                            <li><a href="pages/habilidades_gerais/elementais_gerais/fogo.html">Jutsus Estilo Fogo</a></li>
+                                            <li><a href="pages/habilidades_gerais/elementais_gerais/agua.html">Jutsus Estilo Água</a></li>
+                                            <li><a href="pages/habilidades_gerais/elementais_gerais/vento.html">Jutsus Estilo Vento</a></li>
+                                            <li><a href="pages/habilidades_gerais/elementais_gerais/terra.html">Jutsus Estilo Terra</a></li>
+                                            <li><a href="pages/habilidades_gerais/elementais_gerais/raio.html">Jutsus Estilo Raio</a></li>
+                                            <li><a href="pages/habilidades_gerais/elementais_gerais/gerais.html">Jutsus Gerais</a></li>
+                                        </ul>
+                                    </details>
+                                </li>
+                                <li><a href="pages/habilidades_gerais/dojutsus_gennin.html">Dojutsu Gennin</a></li>
+                                <li><a href="pages/habilidades_gerais/dojutsus_chunnin.html">Dojutsu Chunnin</a></li>
+                                <li><a href="pages/habilidades_gerais/monte_myobuko.html">Monte Myoboku</a></li>
+                                <li><a href="pages/habilidades_gerais/clones.html">Clones</a></li>
+                                <li><a href="pages/habilidades_gerais/invocações.html">Invocações</a></li>
+                            </ul>
+                        </details>
+                    </li>
+                    <li>
+                        <details>
+                            <summary>Chakra</summary>
+                            <ul class="bg-base-100 rounded-t-none p-2 w-48 shadow-lg">
+                                <li><a href="pages/chakra/manipulacao_chakra.html">Manipulação de Chakra</a></li>
+                                <li><a href="pages/chakra/aprendizado_jutsu.html">Aprendizado de Jutsu</a></li>
+                                <li><a href="pages/chakra/criacao_jutsu.html">Criação de Jutsu</a></li>
+                            </ul>
+                        </details>
+                    </li>
+                    <li>
+                        <details>
+                            <summary>Economia</summary>
+                            <ul class="bg-base-100 rounded-t-none p-2 w-48 shadow-lg">
+                                <li><a href="pages/economia/ryos.html">Ryos</a></li>
+                                <li><a href="pages/economia/estabelecimentos.html">Estabelecimentos</a></li>
+                            </ul>
+                        </details>
+                    </li>
+                    <li>
+                        <details>
+                            <summary>Sistemas</summary>
+                            <ul class="bg-base-100 rounded-t-none p-2 w-64 shadow-lg max-h-[75vh] overflow-y-auto overflow-x-hidden whitespace-normal">
+                                <li><a href="pages/sistemas/bingo_book.html">Bingo Book</a></li>
+                                <li><a href="pages/sistemas/criacao_personagem.html">Criação de Personagem</a></li>
+                                <li><a href="pages/sistemas/esconderijos.html">Esconderijo</a></li>
+                                <li><a href="pages/sistemas/fauna_recursos.html">Fauna &amp; Recursos</a></li>
+                                <li><a href="pages/sistemas/ferraria.html">Ferraria</a></li>
+                                <li><a href="pages/sistemas/susanoo.html">Evolução Susanoo</a></li>
+                                <li><a href="pages/sistemas/execucao.html">Execução</a></li>
+                                <li><a href="pages/sistemas/guardioes_ninja.html">Guardiões Ninja</a></li>
+                                <li><a href="pages/sistemas/guerras_ninja.html">Guerra Ninja</a></li>
+                                <li><a href="pages/sistemas/jornal_shinobi.html">Jornal Shinobi Global</a></li>
+                                <li><a href="pages/sistemas/karma.html">Karma</a></li>
+                                <li><a href="pages/sistemas/locomocao_caminhos.html">Locomoção & Caminhos</a></li>
+                                <li><a href="pages/sistemas/on_off.html">On/Off</a></li>
+                                <li><a href="pages/sistemas/roubo_dojutsu.html">Roubo de Dojutsu</a></li>
+                                <li><a href="pages/sistemas/roubo_sangue.html">Roubo de Sangue</a></li>
+                                <li><a href="pages/sistemas/seis_caminhos.html">Seis Caminhos de Pain</a></li>
+                                <li><a href="pages/sistemas/sistema_cientifico.html">Sistema Científico</a></li>
+                                <li><a href="pages/sistemas/aliancas_entre_vilas.html">Sistema de Alianças</a></li>
+                                <li><a href="pages/sistemas/armadilhas.html">Sistema de Armadilhas</a></li>
+                                <li><a href="pages/sistemas/casamento.html">Sistema de Casamento</a></li>
+                                <li><a href="pages/sistemas/ups.html">Sistema de UPs<br>(Cards e Ranks)</a></li>
+                                <li><a href="pages/sistemas/sistema_medico.html">Sistema Médico</a></li>
+                                <li><a href="pages/sistemas/tribunal_shinobi.html">Tribunal Shinobi</a></li>
+                                <li><a href="pages/sistemas/times_ninja.html">Times Ninja</a></li>
+                                <li><a href="pages/sistemas/troca_de_vilas.html">Troca de Vilas</a></li>
+                                <li>
+                                    <details>
+                                        <summary class="font-bold text-emerald-600">Subsistemas</summary>
+                                        <ul class="p-2 rounded-lg mt-1">
+                                            <li><a href="pages/sistemas/subsistemas/lista_subsistemas.html">Lista de Subsistemas</a></li>
+                                            <li><a href="pages/sistemas/subsistemas/konohagakure.html">Subsistema<br>Konohagakure</a></li>
+                                            <li><a href="pages/sistemas/subsistemas/kirigakure.html">Subsistema Kirigakure</a></li>
+                                            <li><a href="pages/sistemas/subsistemas/sunagakure.html">Subsistema Sunagakure</a></li>
+                                            <li><a href="pages/sistemas/subsistemas/iwagakure.html">Subsistema Iwagakure</a></li>
+                                        </ul>
+                                    </details>
+                                </li>
+                                <li>
+                                    <details>
+                                        <summary class="font-bold text-orange-500">Caça às Bijūs</summary>
+                                        <ul class="p-2 rounded-lg mt-1">
+                                            <li><a href="pages/sistemas/bijuus.html">Sistema de Bijūs</a></li>
+                                            <li><a href="pages/sistemas/gedo_mazo.html">Gedō Mazō</a></li>
+                                            <li><a href="pages/sistemas/comabte_logica.html">Combate de Lógica</a></li>
+                                            <li><a href="pages/sistemas/jutsus_supremos.html">Jutsus Supremos</a></li>
+                                        </ul>
+                                    </details>
+                                </li>
+                                <li>
+                                    <details>
+                                        <summary class="font-bold text-blue-500">Sistemas Exclusivos</summary>
+                                        <ul class="p-2 rounded-lg mt-1">
+                                            <li><a href="pages/sistemas/sistemas_exclusivos/absorcao_de_momoshiki.html">Absorção de Momoshiki</a></li>
+                                            <li><a href="pages/sistemas/sistemas_exclusivos/edo_tensei.html">Edo Tensei</a></li>
+                                            <li><a href="pages/sistemas/sistemas_exclusivos/pescaria_de_chakra.html">Pescaria de Chakra</a></li>
+                                            <li><a href="pages/sistemas/sistemas_exclusivos/reencarnacao_em_vida.html">Reencarnação em Vida</a></li>
+                                            <li><a href="pages/sistemas/sistemas_exclusivos/revestimento_corporal.html">Revestimento Corporal</a></li>
+                                            <li><a href="pages/sistemas/sistemas_exclusivos/tecnica_parasita.html">Técnica Parasita</a></li>
+                                            <li><a href="pages/sistemas/sistemas_exclusivos/tecnica_quimera.html">Técnica Quimera</a></li>
+                                        </ul>
+                                    </details>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+                    <li>
+                        <details>
+                            <summary>Títulos</summary>
+                            <ul class="bg-base-100 rounded-t-none p-2 w-64 shadow-lg">
+                                <li><a href="pages/titulo/sannin_lendario.html">Sannin Lendário</a></li>
+                                <li><a href="pages/titulo/escorpiao_vermelho.html">Escorpião Vermelho</a></li>
+                                <li><a href="pages/titulo/nukkennin.html">Nukkenin</a></li>
+                                <li><a href="pages/titulo/corpo_de_explosao.html">Corpo de Explosão</a></li>
+                                <li class="border-t border-base-content/10 mt-2 pt-2">
+                                    <details>
+                                        <summary class="font-bold text-primary">Sete Espadachins</summary>
+                                        <ul class="p-2 rounded-lg mt-1">
+                                            <li><a href="pages/titulo/espadachin_da_nevoa.html">Sistema Geral</a></li>
+                                            <li><a href="pages/titulo/espadas_da_nevoa.html">Enciclopédia (Espadas)</a></li>
+                                        </ul>
+                                    </details>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+                    <li><a href="pages/lista_personagens.html">Personagens</a></li>
+                </ul>
+            </div>
+
+            <!-- Botão Hamburguer (mobile) -->
+            <div id="hamburger-wrapper">
+                <button id="hamburger-btn" class="btn btn-ghost btn-square">
+                    <svg id="icon-open" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    <svg id="icon-close" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- DRAWER MOBILE -->
+        <div id="mobile-menu" class="bg-base-100">
+            <ul class="menu w-full p-4 text-base">
+                <li><a href="index.html">Início</a></li>
+                <li>
+                    <details>
+                        <summary>Utilitários</summary>
+                        <ul>
+                            <li><a href="pages/utilitarios/zetsu_clones.html">Zetsus e Clones</a></li>
+                            <li><a href="pages/utilitarios/teletransporte_marcas.html">Teletransporte e Marcas</a></li>
+                            <li><a href="pages/utilitarios/ocultacoes.html">Ocultação de Técnicas</a></li>
+                            <li><a href="pages/utilitarios/evasao_e_contraataque.html">Evasão e Contra-Ataque</a></li>
+                        </ul>
+                    </details>
+                </li>
+                <li><a href="pages/introducao.html">Introdução ao RPG</a></li>
+                <li>
+                    <details>
+                        <summary>Habilidades Gerais</summary>
+                        <ul>
+                            <li><a href="pages/habilidades_gerais/taijutsus.html">Taijutsu</a></li>
+                            <li>
+                                <details>
+                                    <summary class="font-bold text-amber-500">Elementais/Gerais</summary>
+                                    <ul class="p-2 rounded-lg mt-1">
+                                        <li><a href="pages/habilidades_gerais/elementais_gerais/fogo.html">Jutsus Estilo Fogo</a></li>
+                                        <li><a href="pages/habilidades_gerais/elementais_gerais/agua.html">Jutsus Estilo Água</a></li>
+                                        <li><a href="pages/habilidades_gerais/elementais_gerais/vento.html">Jutsus Estilo Vento</a></li>
+                                        <li><a href="pages/habilidades_gerais/elementais_gerais/terra.html">Jutsus Estilo Terra</a></li>
+                                        <li><a href="pages/habilidades_gerais/elementais_gerais/raio.html">Jutsus Estilo Raio</a></li>
+                                        <li><a href="pages/habilidades_gerais/elementais_gerais/gerais.html">Jutsus Gerais</a></li>
+                                    </ul>
+                                </details>
+                            </li>
+                            <li><a href="pages/habilidades_gerais/dojutsus_gennin.html">Dojutsu Gennin</a></li>
+                            <li><a href="pages/habilidades_gerais/dojutsus_chunnin.html">Dojutsu Chunnin</a></li>
+                            <li><a href="pages/habilidades_gerais/monte_myobuko.html">Monte Myoboku</a></li>
+                            <li><a href="pages/habilidades_gerais/clones.html">Clones</a></li>
+                            <li><a href="pages/habilidades_gerais/invocações.html">Invocações</a></li>
+                        </ul>
+                    </details>
+                </li>
+                <li>
+                    <details>
+                        <summary>Chakra</summary>
+                        <ul>
+                            <li><a href="pages/chakra/manipulacao_chakra.html">Manipulação de Chakra</a></li>
+                            <li><a href="pages/chakra/aprendizado_jutsu.html">Aprendizado de Jutsu</a></li>
+                            <li><a href="pages/chakra/criacao_jutsu.html">Criação de Jutsu</a></li>
+                        </ul>
+                    </details>
+                </li>
+                <li>
+                    <details>
+                        <summary>Economia</summary>
+                        <ul>
+                            <li><a href="pages/economia/ryos.html">Ryos</a></li>
+                            <li><a href="pages/economia/estabelecimentos.html">Estabelecimentos</a></li>
+                        </ul>
+                    </details>
+                </li>
+                <li>
+                    <details>
+                        <summary>Sistemas</summary>
+                        <ul>
+
+                            <li><a href="pages/sistemas/bingo_book.html">Bingo Book</a></li>
+                            <li><a href="pages/sistemas/criacao_personagem.html">Criação de Personagem</a></li>
+                            <li><a href="pages/sistemas/esconderijos.html">Esconderijo</a></li>
+                            <li><a href="pages/sistemas/fauna_recursos.html">Fauna &amp; Recursos</a></li>
+                            <li><a href="pages/sistemas/ferraria.html">Ferraria</a></li>
+                            <li><a href="pages/sistemas/susanoo.html">Evolução Susanoo</a></li>
+                            <li><a href="pages/sistemas/execucao.html">Execução</a></li>
+                            <li><a href="pages/sistemas/guardioes_ninja.html">Guardiões Ninja</a></li>
+                            <li><a href="pages/sistemas/guerras_ninja.html">Guerra Ninja</a></li>
+                            <li><a href="pages/sistemas/jornal_shinobi.html">Jornal Shinobi Global</a></li>
+                            <li><a href="pages/sistemas/karma.html">Karma</a></li>
+                            <li><a href="pages/sistemas/locomocao_caminhos.html">Locomoção & Caminhos</a></li>
+                            <li><a href="pages/sistemas/on_off.html">On/Off</a></li>
+                            <li><a href="pages/sistemas/roubo_dojutsu.html">Roubo de Dojutsu</a></li>
+                            <li><a href="pages/sistemas/roubo_sangue.html">Roubo de Sangue</a></li>
+                            <li><a href="pages/sistemas/seis_caminhos.html">Seis Caminhos de Pain</a></li>
+                            <li><a href="pages/sistemas/sistema_cientifico.html">Sistema Científico</a></li>
+                            <li><a href="pages/sistemas/aliancas_entre_vilas.html">Sistema de Alianças</a></li>
+                            <li><a href="pages/sistemas/armadilhas.html">Sistema de Armadilhas</a></li>
+                            <li><a href="pages/sistemas/casamento.html">Sistema de Casamento</a></li>
+                            <li><a href="pages/sistemas/ups.html">Sistema de UPs (Cards e Ranks)</a></li>
+                            <li><a href="pages/sistemas/sistema_medico.html">Sistema Médico</a></li>
+                            <li><a href="pages/sistemas/tribunal_shinobi.html">Tribunal Shinobi</a></li>
+                            <li><a href="pages/sistemas/times_ninja.html">Times Ninja</a></li>
+                            <li><a href="pages/sistemas/troca_de_vilas.html">Troca de Vilas</a></li>
+                                <li>
+                                    <details>
+                                        <summary class="font-bold text-emerald-600">Subsistemas</summary>
+                                        <ul class="p-2 rounded-lg mt-1">
+                                            <li><a href="pages/sistemas/subsistemas/lista_subsistemas.html">Lista de Subsistemas</a></li>
+                                            <li><a href="pages/sistemas/subsistemas/konohagakure.html">Subsistema Konohagakure</a></li>
+                                            <li><a href="pages/sistemas/subsistemas/kirigakure.html">Subsistema Kirigakure</a></li>
+                                            <li><a href="pages/sistemas/subsistemas/sunagakure.html">Subsistema Sunagakure</a></li>
+                                            <li><a href="pages/sistemas/subsistemas/iwagakure.html">Subsistema Iwagakure</a></li>
+                                        </ul>
+                                    </details>
+                                </li>
+                                <li>
+                                <details>
+                                    <summary class="font-bold text-orange-500">Caça às Bijūs</summary>
+                                    <ul class="p-2 rounded-lg mt-1">
+                                        <li><a href="pages/sistemas/bijuus.html">Sistema de Bijūs</a></li>
+                                        <li><a href="pages/sistemas/gedo_mazo.html">Gedō Mazō</a></li>
+                                        <li><a href="pages/sistemas/comabte_logica.html">Combate de Lógica</a></li>
+                                        <li><a href="pages/sistemas/jutsus_supremos.html">Jutsus Supremos</a></li>
+                                    </ul>
+                                </details>
+                            </li>
+                            <li>
+                                <details>
+                                    <summary class="font-bold text-blue-500">Sistemas Exclusivos</summary>
+                                    <ul class="p-2 rounded-lg mt-1">
+                                        <li><a href="pages/sistemas/sistemas_exclusivos/absorcao_de_momoshiki.html">Absorção de Momoshiki</a></li>
+                                        <li><a href="pages/sistemas/sistemas_exclusivos/edo_tensei.html">Edo Tensei</a></li>
+                                        <li><a href="pages/sistemas/sistemas_exclusivos/pescaria_de_chakra.html">Pescaria de Chakra</a></li>
+                                        <li><a href="pages/sistemas/sistemas_exclusivos/reencarnacao_em_vida.html">Reencarnação em Vida</a></li>
+                                        <li><a href="pages/sistemas/sistemas_exclusivos/revestimento_corporal.html">Revestimento Corporal</a></li>
+                                        <li><a href="pages/sistemas/sistemas_exclusivos/tecnica_parasita.html">Técnica Parasita</a></li>
+                                        <li><a href="pages/sistemas/sistemas_exclusivos/tecnica_quimera.html">Técnica Quimera</a></li>
+                                    </ul>
+                                </details>
+                            </li>
+                        </ul>
+                    </details>
+                </li>
+                <li>
+                    <details>
+                        <summary>Títulos</summary>
+                        <ul>
+                            <li><a href="pages/titulo/sannin_lendario.html">Sannin Lendário</a></li>
+                            <li><a href="pages/titulo/escorpiao_vermelho.html">Escorpião Vermelho</a></li>
+                            <li><a href="pages/titulo/nukkennin.html">Nukkenin</a></li>
+                            <li><a href="pages/titulo/corpo_de_explosao.html">Corpo de Explosão</a></li>
+                            <li>
+                                <details>
+                                    <summary class="font-bold text-primary">Sete Espadachins</summary>
+                                    <ul>
+                                        <li><a href="pages/titulo/espadachin_da_nevoa.html">Sistema Geral</a></li>
+                                        <li><a href="pages/titulo/espadas_da_nevoa.html">Enciclopédia (Espadas)</a></li>
+                                    </ul>
+                                </details>
+                            </li>
+                        </ul>
+                    </details>
+                </li>
+                <li><a href="pages/lista_personagens.html">Personagens</a></li>
+            </ul>
+        </div>
+        <div id="mobile-overlay"></div>
+    `;
+    document.body.appendChild(root);
+
+    // ─── 3. Lógica ────────────────────────────────────────────────────────────
+    const btn     = document.getElementById('hamburger-btn');
+    const menu    = document.getElementById('mobile-menu');
+    const overlay = document.getElementById('mobile-overlay');
+    const btnWrap = document.getElementById('hamburger-wrapper');
+
+    function abrir() {
+        menu.classList.add('menu-aberto');
+        overlay.classList.add('menu-aberto');
+        btnWrap.classList.add('menu-aberto-icon');
+    }
+    function fechar() {
+        menu.classList.remove('menu-aberto');
+        overlay.classList.remove('menu-aberto');
+        btnWrap.classList.remove('menu-aberto-icon');
+    }
+
+    btn.addEventListener('click', () => menu.classList.contains('menu-aberto') ? fechar() : abrir());
+    overlay.addEventListener('click', fechar);
+    window.addEventListener('resize', () => { if (window.innerWidth >= 1024) fechar(); });
+
+    // ─── 4. Botão "Copiar loja" para Lojas de Personagens ──────────────────────
+    function copiarLoja() {
+        const container = document.querySelector('main .max-w-3xl');
+        if (!container) return;
+        const children = Array.from(container.children);
+        
+        let resultado = [];
+        let jutsuAtual = [];
+        let passouDivider = false;
+        const hasHr = container.querySelectorAll('hr').length > 0;
+        let passouPrimeiroHr = false;
+        let primeiroParagrafoIgnorado = false;
+        
+        for (let el of children) {
+            if (el.classList.contains('divider')) {
+                passouDivider = true;
+                continue;
+            }
+            if (!passouDivider) continue;
+
+            if (el.tagName === 'HR') {
+                passouPrimeiroHr = true;
+                if (jutsuAtual.length > 0) {
+                    resultado.push(jutsuAtual.join('\n'));
+                    jutsuAtual = [];
+                }
+                continue;
+            }
+
+            // Se a página utiliza HR como separador, tudo antes do primeiro HR é biografia/lore
+            if (hasHr && !passouPrimeiroHr) {
+                continue;
+            }
+
+            if (el.tagName === 'P') {
+                const texto = el.textContent.trim();
+                if (!texto) continue;
+
+                // Se a página não possui HR (ex: Zabuza), o primeiro parágrafo após divider é a biografia
+                if (!hasHr && !primeiroParagrafoIgnorado) {
+                    primeiroParagrafoIgnorado = true;
+                    if (!texto.startsWith('Rank:') && !/^(preço|valor):/i.test(texto)) {
+                        continue;
+                    }
+                }
+
+                // Preço delimita o fim do jutsu em páginas sem HR
+                if (/^(preço|valor):/i.test(texto)) {
+                    if (!hasHr && jutsuAtual.length > 0) {
+                        resultado.push(jutsuAtual.join('\n'));
+                        jutsuAtual = [];
+                    }
+                    continue;
+                }
+
+                // Ignora descrições e títulos de seção
+                if (
+                    texto.startsWith('|') || 
+                    texto.includes('||') || 
+                    texto.startsWith('⠂|') ||
+                    texto.includes('JUTSUS GENNIN') || 
+                    texto.includes('LIBERAÇÃO') ||
+                    texto.includes('EQUIPAMENTOS NINJA') ||
+                    texto.startsWith('⚖️ Balanceamento') ||
+                    texto.startsWith('Nivelamento:')
+                ) {
+                    continue;
+                }
+
+                jutsuAtual.push(texto);
+            }
+        }
+
+        if (jutsuAtual.length > 0) {
+            resultado.push(jutsuAtual.join('\n'));
+        }
+
+        const textoFinal = resultado.join('\n\n');
+        const btn = document.getElementById('btn-copiar-loja');
+        if (!btn) return;
+        const textoOriginal = btn.innerHTML;
+
+        const aposCopiar = () => {
+            btn.innerHTML = '✓ Copiado!';
+            btn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+            btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+            setTimeout(() => {
+                btn.innerHTML = textoOriginal;
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+                btn.classList.add('bg-blue-600', 'hover:bg-blue-500');
+            }, 2000);
+        };
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(textoFinal).then(aposCopiar).catch(() => {
+                fallbackCopiar(textoFinal);
+                aposCopiar();
+            });
+        } else {
+            fallbackCopiar(textoFinal);
+            aposCopiar();
+        }
+    }
+
+    window.execCopiarMobile = function(texto) {
+        const textarea = document.createElement('textarea');
+        textarea.value = texto;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.top = '0';
+        textarea.style.left = '-9999px';
+        textarea.style.fontSize = '16px';
+        document.body.appendChild(textarea);
+        
+        if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
+            const range = document.createRange();
+            range.selectNodeContents(textarea);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            textarea.setSelectionRange(0, 999999);
+        } else {
+            textarea.select();
+        }
+        
+        try {
+            document.execCommand('copy');
+        } catch (err) {
+            console.error('Erro ao copiar:', err);
+        }
+        document.body.removeChild(textarea);
+    };
+
+    function fallbackCopiar(texto) {
+        window.execCopiarMobile(texto);
+    }
+
+    window.copiarLoja = copiarLoja;
+    window.fallbackCopiar = fallbackCopiar;
+
+    function initBotaoCopiarPersonagem() {
+        if (document.getElementById('btn-copiar-loja')) return;
+        const subtitle = document.querySelector('main .max-w-3xl h2');
+        if (subtitle && (subtitle.textContent.includes('Loja de') || window.location.pathname.includes('/pages/lojas/'))) {
+            subtitle.classList.remove('mb-6');
+            subtitle.classList.add('mb-2');
+            const btnDiv = document.createElement('div');
+            btnDiv.className = 'text-center my-2';
+            btnDiv.innerHTML = `
+                <button id="btn-copiar-loja" class="btn btn-sm bg-blue-600 hover:bg-blue-500 text-white font-bold border-none shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/50 hover:scale-105 active:scale-95 transition-all duration-200">
+                    Copiar loja
+                </button>
+            `;
+            subtitle.insertAdjacentElement('afterend', btnDiv);
+            btnDiv.querySelector('button').onclick = copiarLoja;
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initBotaoCopiarPersonagem);
+    } else {
+        initBotaoCopiarPersonagem();
+    }
+})();
